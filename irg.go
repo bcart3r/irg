@@ -34,29 +34,32 @@ func Connect(server string) *Bot {
 	irc := &Irc{reader, writer, in, out}
 	bot := &Bot{"GoBot", "GoBot", events, irc}
 
-	go func() {
-		for {
-			ln, err := bot.Conn.Reader.ReadString(byte('\n'))
-			if err != nil {
-				fmt.Println(err)
-			}
-			bot.Conn.R <- ln
-		}
-	}()
-
-	go func() {
-		for {
-			str := <-bot.Conn.W
-			_, err := bot.Conn.Writer.WriteString(str + "\r\n")
-			if err != nil {
-				fmt.Println(err)
-			}
-
-			writer.Flush()
-		}
-	}()
+	go readHandler(bot)
+	go writeHandler(bot)
 
 	return bot
+}
+
+func writeHandler(bot *Bot) {
+	for {
+		str := <-bot.Conn.W
+		_, err := bot.Conn.Writer.WriteString(str + "\r\n")
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		writer.Flush()
+	}
+}
+
+func readHandler(bot *Bot) {
+	for {
+		ln, err := bot.Conn.Reader.ReadString(byte('\n'))
+		if err != nil {
+			fmt.Println(err)
+		}
+		bot.Conn.R <- ln
+	}
 }
 
 func (b *Bot) Join(ch string) {
