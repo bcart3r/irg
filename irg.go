@@ -51,12 +51,12 @@ func Connect(server string) *Bot {
 	go func() {
 		for {
 			str := <-out
-			_, err := reader.WriteString(str + "\r\n")
+			_, err := writer.WriteString(str + "\r\n")
 			if err != nil {
 				fmt.Println(err)
 			}
 
-			b.Conn.Writer.Flush()
+			writer.Flush()
 		}
 	}()
 
