@@ -17,7 +17,7 @@ type Irc struct {
 type Bot struct {
 	Nick, Name string
 	Events     chan string
-	Conn       Irc
+	Conn       *Irc
 }
 
 func (b *Bot) Login(nick, name string) {
