@@ -1,4 +1,4 @@
-package irg
+package main
 
 import (
 	"fmt"
@@ -20,21 +20,6 @@ type Bot struct {
 	Conn       *Irc
 }
 
-func (b *Bot) Login(nick, name string) {
-	b.setNickName(nick, name)
-	b.Conn.W <- "NICK " + b.Nick
-	b.Conn.W <- "NAME " + b.Nick + " 0 * :" + b.Name
-}
-
-func (b *Bot) setNickName(nick, name string) {
-	b.Nick = nick
-	b.Name = name
-}
-
-func (b *Bot) Join(ch string) {
-	b.Conn.W <- "JOIN " + ch
-}
-
 func Connect(server string) *Bot {
 	conn, err := net.Dial("tcp", server)
 	if err != nil {
@@ -47,11 +32,22 @@ func Connect(server string) *Bot {
 	out := make(chan string, 1000)
 	events := make(chan string, 1000)
 	irc := &Irc{reader, writer, in, out}
+	bot := &Bot{"GoBot", "GoBot", events, irc}
 
 	go func() {
 		for {
-			str := <-out
-			_, err := writer.WriteString(str + "\r\n")
+			ln, err := bot.Conn.Reader.ReadString(byte('\n'))
+			if err != nil {
+				fmt.Println(err)
+			}
+			bot.Conn.R <- ln
+		}
+	}()
+
+	go func() {
+		for {
+			str := <-bot.Conn.W
+			_, err := bot.Conn.Writer.WriteString(str + "\r\n")
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -60,17 +56,22 @@ func Connect(server string) *Bot {
 		}
 	}()
 
-	go func() {
-		for {
-			ln, err := reader.ReadString(byte('\n'))
-			if err != nil {
-				fmt.Println(err)
-			}
-			in <- ln
-		}
-	}()
+	return bot
+}
 
-	return &Bot{"GoBot", "GoBot", events, irc}
+func (b *Bot) Join(ch string) {
+	b.Conn.W <- "JOIN " + ch
+}
+
+func (b *Bot) Login(nick, name string) {
+	b.setNickName(nick, name)
+	b.Conn.W <- "NICK " + b.Nick
+	b.Conn.W <- "USER " + b.Nick + " 0 * :" + b.Name
+}
+
+func (b *Bot) setNickName(nick, name string) {
+	b.Nick = nick
+	b.Name = name
 }
 
 func (b *Bot) RunLoop() {
