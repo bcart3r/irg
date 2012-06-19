@@ -40,7 +40,6 @@ func Connect(server string) *Bot {
 	if err != nil {
 		panic(err)
 	}
-	defer conn.Close()
 
 	reader := bufio.NewReader(conn)
 	writer := bufio.NewWriter(conn)
