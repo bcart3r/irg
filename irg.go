@@ -47,31 +47,11 @@ func Connect(server string) *Bot {
 	out := make(chan string, 1000)
 	events := make(chan string, 1000)
 	irc := &Irc{reader, writer, in, out}
-	bot := &Bot{"GoBot", "GoBot", events, irc}
 
-	bot.writeHandler()
-	bot.readHandler()
-
-	return bot
-}
-
-func (b *Bot) readHandler() {
 	go func() {
 		for {
-			ln, err := b.Conn.Reader.ReadString(byte('\n'))
-			if err != nil {
-				fmt.Println(err)
-			}
-			b.Conn.R <- ln
-		}
-	}()
-}
-
-func (b *Bot) writeHandler() {
-	go func() {
-		for {
-			str := <-b.Conn.W
-			_, err := b.Conn.Writer.WriteString(str + "\r\n")
+			str := <-out
+			_, err := reader.WriteString(str + "\r\n")
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -79,6 +59,18 @@ func (b *Bot) writeHandler() {
 			b.Conn.Writer.Flush()
 		}
 	}()
+
+	go func() {
+		for {
+			ln, err := reader.ReadString(byte('\n'))
+			if err != nil {
+				fmt.Println(err)
+			}
+			in <- ln
+		}
+	}()
+
+	return &Bot{"GoBot", "GoBot", events, irc}
 }
 
 func (b *Bot) RunLoop() {
