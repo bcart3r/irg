@@ -46,8 +46,9 @@ func Connect(server string) *Bot {
 	writer := bufio.NewWriter(conn)
 	in := make(chan string, 1000)
 	out := make(chan string, 1000)
+	events := make(chan string, 1000)
 	irc := &Irc{reader, writer, in, out}
-	bot := &Bot{"GoBot", "GoBot", events, conn}
+	bot := &Bot{"GoBot", "GoBot", events, irc}
 
 	bot.readHandler()
 	bot.writeHandler()
