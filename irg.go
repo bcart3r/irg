@@ -2,9 +2,17 @@ package irg
 
 import (
 	"fmt"
-	"github.com/bcart3r/irg/irc"
+	"bufio"
 	"regexp"
+	"net"
 )
+
+type Irc struct {
+	Reader *bufio.Reader
+	Writer *bufio.Writer
+	R      chan string
+	W      chan string
+}
 
 type Bot struct {
 	Nick, Name string
@@ -23,17 +31,57 @@ func (b *Bot) setNickName(nick, name string) {
 	b.Name = name
 }
 
-func Connect(server string) *Bot {
-	conn := irc.Connect(server)
-	events := make(chan string, 1000)
+func (b *Bot) Join(ch) {
+	b.Conn.W <- "JOIN " + ch
+}
 
-	return &Bot{"GoBot", "GoBot", events, conn}
+func Connect(server string) *Bot {
+	conn, err := net.Dial("tcp", server)
+	if err != nil {
+		panic(err)
+	}
+	defer conn.Close()
+
+	reader := bufio.NewReader(conn)
+	writer := bufio.NewWriter(conn)
+	in := make(chan string, 1000)
+	out := make(chan string, 1000)
+	irc := &Irc{reader, writer, in, out}
+	bot := &Bot{"GoBot", "GoBot", events, conn}
+
+	bot.readHandler()
+	bot.writeHandler()
+
+	return bot
+}
+
+func (b *Bot) readHandler() {
+	go func() {
+		for {
+			ln, err := b.Conn.Reader.ReadString(byte('\n'))
+			if err != nil {
+				fmt.Println(err)
+			}
+			b.Conn.R <- ln
+		}
+	}()
+}
+
+func (b *Bot) writeHandler() {
+	go func() {
+		for {
+			str := <-b.Conn.W
+			_, err := b.Conn.Writer.WriteString(str + "\r\n")
+			if err != nil {
+				fmt.Println(err)
+			}
+
+			b.Conn.Writer.Flush()
+		}
+	}()
 }
 
 func (b *Bot) RunLoop() {
-	b.Conn.ReadHandler()
-	b.Conn.WriteHandler()
-
 	for {
 		ln := <-b.Conn.R
 		fmt.Print(ln)
