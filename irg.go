@@ -27,13 +27,13 @@ func Connect(server string) *Bot {
 	conn := irc.Connect(server)
 	events := make(chan string, 1000)
 
-	conn.ReadHandler()
-	conn.WriteHandler()
-
 	return &Bot{"GoBot", "GoBot", events, conn}
 }
 
 func (b *Bot) RunLoop() {
+	b.Conn.ReadHandler()
+	b.Conn.WriteHandler()
+
 	for {
 		ln := <-b.Conn.R
 		fmt.Print(ln)
