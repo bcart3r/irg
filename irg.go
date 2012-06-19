@@ -2,7 +2,7 @@ package irg
 
 import (
 	"fmt"
-	"irg/irc"
+	"github.com/bcart3r/irg/irc"
 	"regexp"
 )
 
