@@ -49,8 +49,8 @@ func Connect(server string) *Bot {
 	irc := &Irc{reader, writer, in, out}
 	bot := &Bot{"GoBot", "GoBot", events, irc}
 
-	bot.readHandler()
 	bot.writeHandler()
+	bot.readHandler()
 
 	return bot
 }
