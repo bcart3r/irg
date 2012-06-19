@@ -17,7 +17,7 @@ type Irc struct {
 type Bot struct {
 	Nick, Name string
 	Events     chan string
-	Conn       *irc.Irc
+	Conn       Irc
 }
 
 func (b *Bot) Login(nick, name string) {
@@ -31,7 +31,7 @@ func (b *Bot) setNickName(nick, name string) {
 	b.Name = name
 }
 
-func (b *Bot) Join(ch) {
+func (b *Bot) Join(ch string) {
 	b.Conn.W <- "JOIN " + ch
 }
 
