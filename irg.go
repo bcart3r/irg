@@ -5,6 +5,7 @@ import (
 	"bufio"
 	"regexp"
 	"net"
+	"log"
 )
 
 type Irc struct {
@@ -24,7 +25,8 @@ type Bot struct {
 func Connect(server string) *Bot {
 	conn, err := net.Dial("tcp", server)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
+		return
 	}
 
 	reader := bufio.NewReader(conn)
@@ -46,7 +48,8 @@ func writeHandler(bot *Bot) {
 		str := <-bot.Conn.W
 		_, err := bot.Conn.Writer.WriteString(str + "\r\n")
 		if err != nil {
-			fmt.Println(err)
+			log.Println("Write Error: " + err)
+			return
 		}
 
 		bot.Conn.Writer.Flush()
@@ -57,7 +60,8 @@ func readHandler(bot *Bot) {
 	for {
 		ln, err := bot.Conn.Reader.ReadString(byte('\n'))
 		if err != nil {
-			fmt.Println(err)
+			log.Println("Read Error: " + err)
+			return
 		}
 		bot.Conn.R <- ln
 	}
