@@ -17,6 +17,7 @@ type Irc struct {
 type Bot struct {
 	Nick, Name string
 	Events     chan string
+	Chan       string
 	Conn       *Irc
 }
 
@@ -32,7 +33,7 @@ func Connect(server string) *Bot {
 	out := make(chan string, 1000)
 	events := make(chan string, 1000)
 	irc := &Irc{reader, writer, in, out}
-	bot := &Bot{"GoBot", "GoBot", events, irc}
+	bot := &Bot{"GoBot", "GoBot", events, "", irc}
 
 	go readHandler(bot)
 	go writeHandler(bot)
@@ -48,7 +49,7 @@ func writeHandler(bot *Bot) {
 			fmt.Println(err)
 		}
 
-		writer.Flush()
+		bot.Conn.Writer.Flush()
 	}
 }
 
@@ -62,14 +63,23 @@ func readHandler(bot *Bot) {
 	}
 }
 
+func (b *Bot) Write(str string) {
+	b.Conn.W <- str
+}
+
+func (b *Bot) Msg(str string) {
+	b.Write("PRIVMSG " + b.Chan + " :" + str)
+}
+
 func (b *Bot) Join(ch string) {
-	b.Conn.W <- "JOIN " + ch
+	b.Write("JOIN " + ch)
+	b.Chan = ch
 }
 
 func (b *Bot) Login(nick, name string) {
 	b.setNickName(nick, name)
-	b.Conn.W <- "NICK " + b.Nick
-	b.Conn.W <- "USER " + b.Nick + " 0 * :" + b.Name
+	b.Write("NICK " + b.Nick)
+	b.Write("USER " + b.Nick + " 0 * :" + b.Name)
 }
 
 func (b *Bot) setNickName(nick, name string) {
@@ -82,7 +92,7 @@ func (b *Bot) RunLoop() {
 		ln := <-b.Conn.R
 		fmt.Print(ln)
 		if regexp.MustCompile("^PING").Match([]byte(ln)) {
-			b.Conn.W <- "PONG " + regexp.MustCompile(":.*").FindString(ln)
+			b.Write("PONG " + regexp.MustCompile(":.*").FindString(ln))
 		}
 	}
 }
