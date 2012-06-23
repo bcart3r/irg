@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"regexp"
 	"github.com/bcart3r/irg/irc"
-	"log"
 )
 
 var (
