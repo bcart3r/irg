@@ -2,88 +2,43 @@ package irg
 
 import (
 	"fmt"
-	"bufio"
 	"regexp"
-	"net"
+	"github.com/bcart3r/irg/irc"
 	"log"
 )
 
-type Irc struct {
-	Reader *bufio.Reader
-	Writer *bufio.Writer
-	R      chan string
-	W      chan string
-}
+var (
+	pingMatcher = regexp.MustCompile("^PING")
+	netMatcher  = regexp.MustCompile(":.*")
+)
 
 type Bot struct {
 	Nick, Name string
 	Events     chan string
 	Chan       string
-	Conn       *Irc
+	Conn       *irc.Irc
 }
 
 func Connect(server string) *Bot {
-	conn, err := net.Dial("tcp", server)
-	if err != nil {
-		log.Panic(err)
-		return
-	}
+	conn := irc.Connect(server)
+	events := make(chan string, 200)
 
-	reader := bufio.NewReader(conn)
-	writer := bufio.NewWriter(conn)
-	in := make(chan string, 1000)
-	out := make(chan string, 1000)
-	events := make(chan string, 1000)
-	irc := &Irc{reader, writer, in, out}
-	bot := &Bot{"GoBot", "GoBot", events, "", irc}
-
-	go readHandler(bot)
-	go writeHandler(bot)
-
-	return bot
+	return &Bot{"GoBot", "GoBot", events, "", conn}
 }
 
-func writeHandler(bot *Bot) {
-	for {
-		str := <-bot.Conn.W
-		_, err := bot.Conn.Writer.WriteString(str + "\r\n")
-		if err != nil {
-			log.Println("Write Error: " + err)
-			return
-		}
-
-		bot.Conn.Writer.Flush()
-	}
-}
-
-func readHandler(bot *Bot) {
-	for {
-		ln, err := bot.Conn.Reader.ReadString(byte('\n'))
-		if err != nil {
-			log.Println("Read Error: " + err)
-			return
-		}
-		bot.Conn.R <- ln
-	}
-}
-
-func (b *Bot) Write(str string) {
-	b.Conn.W <- str
-}
-
-func (b *Bot) Msg(str string) {
-	b.Write("PRIVMSG " + b.Chan + " :" + str)
+func (b *Bot) Msg(msg string) {
+	b.Conn.Write("PRIVMSG " + b.Chan + " :" + msg)
 }
 
 func (b *Bot) Join(ch string) {
-	b.Write("JOIN " + ch)
+	b.Conn.Write("JOIN " + ch)
 	b.Chan = ch
 }
 
 func (b *Bot) Login(nick, name string) {
 	b.setNickName(nick, name)
-	b.Write("NICK " + b.Nick)
-	b.Write("USER " + b.Nick + " 0 * :" + b.Name)
+	b.Conn.Write("NICK " + b.Nick)
+	b.Conn.Write("USER " + b.Nick + " 0 * :" + b.Name)
 }
 
 func (b *Bot) setNickName(nick, name string) {
@@ -95,8 +50,8 @@ func (b *Bot) RunLoop() {
 	for {
 		ln := <-b.Conn.R
 		fmt.Print(ln)
-		if regexp.MustCompile("^PING").Match([]byte(ln)) {
-			b.Write("PONG " + regexp.MustCompile(":.*").FindString(ln))
+		if pingMatcher.Match([]byte(ln)) {
+			b.Write("PONG " + netMatcher.FindString(ln))
 		}
 	}
 }
