@@ -3,6 +3,7 @@ package irc
 import (
 	"bufio"
 	"net"
+	"log"
 )
 
 type Irc struct {
@@ -12,7 +13,7 @@ type Irc struct {
 	W      chan string
 }
 
-func Dial(server string) *Bot {
+func Dial(server string) *Irc {
 	conn, err := net.Dial("tcp", server)
 	if err != nil {
 		log.Panic(err)
@@ -40,7 +41,7 @@ func writeHandler(i *Irc) {
 		str := <-i.W
 		_, err := i.Writer.WriteString(str + "\r\n")
 		if err != nil {
-			log.Println("Write Error: " + err)
+			log.Println("Write Error: " + err.Error())
 			return
 		}
 
@@ -52,7 +53,7 @@ func readHandler(i *Irc) {
 	for {
 		ln, err := i.Reader.ReadString(byte('\n'))
 		if err != nil {
-			log.Println("Read Error: " + err)
+			log.Println("Read Error: " + err.Error())
 			return
 		}
 		i.R <- ln
