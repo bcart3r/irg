@@ -17,7 +17,6 @@ func Dial(server string) *Irc {
 	conn, err := net.Dial("tcp", server)
 	if err != nil {
 		log.Panic(err)
-		return
 	}
 
 	reader := bufio.NewReader(conn)
