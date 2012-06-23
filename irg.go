@@ -20,7 +20,7 @@ type Bot struct {
 }
 
 func Connect(server string) *Bot {
-	conn := irc.Connect(server)
+	conn := irc.Dial(server)
 	events := make(chan string, 200)
 
 	return &Bot{"GoBot", "GoBot", events, "", conn}
@@ -51,7 +51,7 @@ func (b *Bot) RunLoop() {
 		ln := <-b.Conn.R
 		fmt.Print(ln)
 		if pingMatcher.Match([]byte(ln)) {
-			b.Write("PONG " + netMatcher.FindString(ln))
+			b.Conn.Write("PONG " + netMatcher.FindString(ln))
 		}
 	}
 }
