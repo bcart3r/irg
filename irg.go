@@ -29,6 +29,10 @@ func (b *Bot) Msg(msg string) {
 	b.Conn.Write("PRIVMSG " + b.Chan + " :" + msg)
 }
 
+func (b *Bot) Pm(user, msg string) {
+	b.Conn.Write("PRIVMSG " + user + " :" + msg)
+}
+
 func (b *Bot) Join(ch string) {
 	b.Conn.Write("JOIN " + ch)
 	b.Chan = ch
