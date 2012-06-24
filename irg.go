@@ -9,13 +9,19 @@ import (
 var (
 	pingMatcher = regexp.MustCompile("^PING")
 	netMatcher  = regexp.MustCompile(":.*")
+	msgMatcher  = regexp.MustCompile(" :.+")
 )
 
 type Bot struct {
 	Nick, Name string
-	Events     chan string
+	Plugins    []*Plugin
 	Chan       string
 	Conn       *irc.Irc
+}
+
+type Plugin struct {
+	Matcher *regexp.Regexp
+	Run     func(msg string) string
 }
 
 /*
@@ -24,9 +30,8 @@ a Pointer to a Bot struct.
 */
 func Connect(server string) *Bot {
 	conn := irc.Dial(server)
-	events := make(chan string, 200)
 
-	return &Bot{"GoBot", "GoBot", events, "", conn}
+	return &Bot{"GoBot", "GoBot", nil, "", conn}
 }
 
 /*
@@ -69,7 +74,14 @@ func (b *Bot) setNickName(nick, name string) {
 }
 
 /*
-Main loops that blocks Reading each line given
+Appends a Plugin struct to the bots Plugin slice.
+*/
+func (b *Bot) addPlugin(plugin *Plugin) {
+	b.Plugins = append(b.Plugins, plugin)
+}
+
+/*
+Main loop that blocks Reading each line given
 from the server reacting on that line if neccesary.
 */
 func (b *Bot) RunLoop() {
@@ -78,6 +90,14 @@ func (b *Bot) RunLoop() {
 		fmt.Print(ln)
 		if pingMatcher.Match([]byte(ln)) {
 			b.Conn.Write("PONG " + netMatcher.FindString(ln))
+		}
+
+		for _, plugin := range b.Plugins {
+			go func() {
+				if plugin.Matcher.Match([]byte(ln)) {
+					b.Msg(plugin.Run(msgMatcher.FindString(ln)))
+				}
+			}()
 		}
 	}
 }
