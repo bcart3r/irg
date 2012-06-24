@@ -15,7 +15,7 @@ type Irc struct {
 
 /*
 Connects to the given server
-return and instance of *Irc.
+returns a Pointer to an Irc struct.
 */
 func Dial(server string) *Irc {
 	conn, err := net.Dial("tcp", server)

@@ -20,7 +20,7 @@ type Bot struct {
 
 /*
 Connects to the given server returning
-an instance of the Bot struct.
+a Pointer to a Bot struct.
 */
 func Connect(server string) *Bot {
 	conn := irc.Dial(server)
@@ -30,7 +30,7 @@ func Connect(server string) *Bot {
 }
 
 /*
-Writes a PRIVMSG to the Bots current Channel.
+Writes a PRIVMSG to the Bots current irc channel.
 */
 func (b *Bot) Msg(msg string) {
 	b.Conn.Write("PRIVMSG " + b.Chan + " :" + msg)
@@ -44,7 +44,7 @@ func (b *Bot) Pm(user, msg string) {
 }
 
 /*
-Joins the given channel then
+Joins the given irc channel then
 sets the Bot's Chan var to the
 value of ch.
 */
