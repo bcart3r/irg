@@ -76,7 +76,7 @@ func (b *Bot) setNickName(nick, name string) {
 /*
 Appends a Plugin struct to the bots Plugin slice.
 */
-func (b *Bot) addPlugin(plugin *Plugin) {
+func (b *Bot) AddPlugin(plugin *Plugin) {
 	b.Plugins = append(b.Plugins, plugin)
 }
 
