@@ -13,6 +13,10 @@ type Irc struct {
 	W      chan string
 }
 
+/*
+Connects to the given server
+return and instance of *Irc.
+*/
 func Dial(server string) *Irc {
 	conn, err := net.Dial("tcp", server)
 	if err != nil {
@@ -31,10 +35,18 @@ func Dial(server string) *Irc {
 	return irc
 }
 
+/*
+Writes to the Irc conn.
+*/
 func (i *Irc) Write(msg string) {
 	i.W <- msg
 }
 
+/*
+Takes each line attempting to be written to the server
+from the Bots W Chan and writes it to the irc Conn
+in the order they are received.
+*/
 func writeHandler(i *Irc) {
 	for {
 		str := <-i.W
@@ -48,6 +60,11 @@ func writeHandler(i *Irc) {
 	}
 }
 
+/*
+Takes each lines read from the Irc conn
+and places them in the Irc conn R Chan
+in the order they are received.
+*/
 func readHandler(i *Irc) {
 	for {
 		ln, err := i.Reader.ReadString(byte('\n'))
