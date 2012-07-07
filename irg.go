@@ -10,12 +10,13 @@ var (
 	pingMatcher = regexp.MustCompile("^PING")
 	netMatcher  = regexp.MustCompile(":.*")
 	msgMatcher  = regexp.MustCompile(" :.+")
+	chanMatcher = regexp.MustCompile("#\\w+")
 )
 
 type Bot struct {
 	Nick, Name string
 	Plugins    []*Plugin
-	Chan       string
+	Channels   []string
 	Conn       *irc.Irc
 }
 
@@ -37,8 +38,9 @@ func Connect(server string) *Bot {
 /*
 Writes a PRIVMSG to the Bots current irc channel.
 */
-func (b *Bot) Msg(msg string) {
-	b.Conn.Write("PRIVMSG " + b.Chan + " :" + msg)
+func (b *Bot) Msg(ln, msg string) {
+	ch := chanMatcher.FindString(ln)
+	b.Conn.Write("PRIVMSG " + ch + " :" + msg)
 }
 
 /*
@@ -55,7 +57,7 @@ value of ch.
 */
 func (b *Bot) Join(ch string) {
 	b.Conn.Write("JOIN " + ch)
-	b.Chan = ch
+	b.Channels = append(b.Channels, ch)
 }
 
 /*
@@ -95,7 +97,7 @@ func (b *Bot) RunLoop() {
 		for _, plugin := range b.Plugins {
 			go func() {
 				if plugin.Matcher.Match([]byte(ln)) {
-					b.Msg(plugin.Run(msgMatcher.FindString(ln)))
+					b.Msg(ln, plugin.Run(msgMatcher.FindString(ln)))
 				}
 			}()
 		}
