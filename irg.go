@@ -2,8 +2,8 @@ package irg
 
 import (
 	"fmt"
-	"regexp"
 	"github.com/bcart3r/irg/irc"
+	"regexp"
 )
 
 var (
@@ -32,7 +32,7 @@ a Pointer to a Bot struct.
 func Connect(server string) *Bot {
 	conn := irc.Dial(server)
 
-	return &Bot{"GoBot", "GoBot", nil, "", conn}
+	return &Bot{"GoBot", "GoBot", nil, nil, conn}
 }
 
 /*
@@ -88,7 +88,7 @@ from the server reacting on that line if neccesary.
 */
 func (b *Bot) RunLoop() {
 	for {
-		ln := <-b.Conn.R
+		ln := <-b.Conn.In
 		fmt.Print(ln)
 		if pingMatcher.Match([]byte(ln)) {
 			b.Conn.Write("PONG " + netMatcher.FindString(ln))

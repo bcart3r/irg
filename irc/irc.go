@@ -2,15 +2,15 @@ package irc
 
 import (
 	"bufio"
-	"net"
 	"log"
+	"net"
 )
 
 type Irc struct {
 	Reader *bufio.Reader
 	Writer *bufio.Writer
-	R      chan string
-	W      chan string
+	In     chan string
+	Out    chan string
 }
 
 /*
@@ -39,7 +39,7 @@ func Dial(server string) *Irc {
 Writes to the Irc conn.
 */
 func (i *Irc) Write(msg string) {
-	i.W <- msg
+	i.Out <- msg
 }
 
 /*
@@ -49,7 +49,7 @@ in the order they are received.
 */
 func writeHandler(i *Irc) {
 	for {
-		str := <-i.W
+		str := <-i.Out
 		_, err := i.Writer.WriteString(str + "\r\n")
 		if err != nil {
 			log.Println("Write Error: " + err.Error())
@@ -72,6 +72,6 @@ func readHandler(i *Irc) {
 			log.Println("Read Error: " + err.Error())
 			return
 		}
-		i.R <- ln
+		i.In <- ln
 	}
 }
