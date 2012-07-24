@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bc/irg"
+	"github.com/bcart3r/irg"
 	"regexp"
 	"time"
 )
