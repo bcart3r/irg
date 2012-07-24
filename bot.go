@@ -18,6 +18,9 @@ type Bot struct {
 	Plugins []*Plugin
 }
 
+/*
+	Connects to the given irc server and returning an instance of Bot.
+*/
 func Connect(server string) *Bot {
 	conn := Dial(server)
 
@@ -28,24 +31,42 @@ func (b *Bot) write(msg string) {
 	b.Conn.Out <- msg
 }
 
+/*
+	Joins the given channel.
+*/
 func (b *Bot) JoinChan(ch string) {
 	b.write("JOIN :" + ch)
 }
 
+/*
+	Logs into the server with the given nick and user.
+*/
 func (b *Bot) Login(nick, user string) {
 	b.Nick = nick
 	b.write("NICK :" + b.Nick)
 	b.write("USER " + b.Nick + " * 0 :" + user)
 }
 
+/*
+ Sends a PRIVMSG containing msg to the given channel.
+*/
 func (b *Bot) Msg(ch, msg string) {
 	b.write("PRIVMSG " + ch + " :" + msg)
 }
 
+/*
+	Adds a Plugin to the bots Plugin slice.
+*/
 func (b *Bot) AddPlugin(plugin *Plugin) {
 	b.Plugins = append(b.Plugins, plugin)
 }
 
+/*
+	Loops endlessly reading each line placed
+	into the bots In channel in the order they are received
+	also loops over the bots Plugin slice for any matches on the current line
+	if the line matches the Plugins Runner function is executed.
+*/
 func (b *Bot) RunLoop() {
 	for {
 		ln := <-b.Conn.In
