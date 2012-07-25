@@ -8,8 +8,8 @@ import (
 
 func sayTime() *irg.Plugin {
 	match := regexp.MustCompile("!time")
-	run := func(b *irg.Bot, ch, m string) {
-		b.Msg(ch, "the time is "+time.Now().String())
+	run := func(b *irg.Bot, ch, sender, m string) {
+		b.Msg(ch, sender+" the time is "+time.Now().String())
 	}
 
 	return &irg.Plugin{match, run}

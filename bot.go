@@ -3,6 +3,7 @@ package irg
 import (
 	"fmt"
 	"regexp"
+	"strings"
 )
 
 var (
@@ -10,6 +11,8 @@ var (
 	netMatcher  = regexp.MustCompile(":.*")
 	msgMatcher  = regexp.MustCompile(" :.+")
 	chanMatcher = regexp.MustCompile("#\\w+")
+	userMatcher = regexp.MustCompile("^:(.+)!")
+	joinMatcher = regexp.MustCompile("JOIN")
 )
 
 type Bot struct {
@@ -55,6 +58,13 @@ func (b *Bot) Msg(ch, msg string) {
 }
 
 /*
+	Sends a PRIVMSG containing msg to the given user
+*/
+func (b *Bot) Pm(user, msg string) {
+	b.write("PRIVMSG " + user + " :" + msg)
+}
+
+/*
 	Adds a Plugin to the bots Plugin slice.
 */
 func (b *Bot) AddPlugin(plugin *Plugin) {
@@ -78,7 +88,12 @@ func (b *Bot) RunLoop() {
 		for _, plugin := range b.Plugins {
 			go func() {
 				if plugin.Matcher.Match([]byte(ln)) {
-					plugin.Runner(b, chanMatcher.FindString(ln), msgMatcher.FindString(ln))
+					plugin.Runner(
+						b,
+						chanMatcher.FindString(ln),
+						strings.Trim(userMatcher.FindString(ln), ":!"),
+						msgMatcher.FindString(ln),
+					)
 				}
 			}()
 		}
