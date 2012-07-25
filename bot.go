@@ -3,7 +3,6 @@ package irg
 import (
 	"fmt"
 	"regexp"
-	"strings"
 )
 
 var (
@@ -91,7 +90,7 @@ func (b *Bot) RunLoop() {
 					plugin.Runner(
 						b,
 						chanMatcher.FindString(ln),
-						strings.Trim(userMatcher.FindString(ln), ":!"),
+						userMatcher.FindString(ln),
 						msgMatcher.FindString(ln),
 					)
 				}
