@@ -3,6 +3,7 @@ package irg
 import (
 	"fmt"
 	"regexp"
+	"strings"
 )
 
 var (
@@ -10,7 +11,7 @@ var (
 	netMatcher  = regexp.MustCompile(":.*")
 	msgMatcher  = regexp.MustCompile(" :.+")
 	chanMatcher = regexp.MustCompile("#\\w+")
-	userMatcher = regexp.MustCompile("^:(.+)!")
+	userMatcher = regexp.MustCompile("^:(\\w+)!")
 	joinMatcher = regexp.MustCompile("JOIN")
 )
 
@@ -90,7 +91,7 @@ func (b *Bot) RunLoop() {
 					plugin.Runner(
 						b,
 						chanMatcher.FindString(ln),
-						userMatcher.FindString(ln),
+						strings.Trim(userMatcher.FindStringSubmatch(ln)[0], ":!"),
 						msgMatcher.FindString(ln),
 					)
 				}
