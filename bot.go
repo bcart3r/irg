@@ -78,6 +78,8 @@ func (b *Bot) AddPlugin(plugin *Plugin) {
 	if the line matches the Plugins Runner function is executed.
 */
 func (b *Bot) RunLoop() {
+	irc := make(map[string]string)
+
 	for {
 		ln := <-b.Conn.In
 		fmt.Print(ln)
@@ -88,12 +90,11 @@ func (b *Bot) RunLoop() {
 		for _, plugin := range b.Plugins {
 			go func() {
 				if plugin.Matcher.Match([]byte(ln)) {
-					plugin.Runner(
-						b,
-						chanMatcher.FindString(ln),
-						strings.Trim(userMatcher.FindStringSubmatch(ln)[0], ":!"),
-						msgMatcher.FindString(ln),
-					)
+					irc["chan"] = chanMatcher.FindString(ln)
+					irc["sender"] = strings.Trim(userMatcher.FindStringSubmatch(ln)[0], ":!")
+					irc["msg"] = msgMatcher.FindString(ln)
+
+					plugin.Runner(b, irc)
 				}
 			}()
 		}
