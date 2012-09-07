@@ -3,16 +3,12 @@ package irg
 import (
 	"fmt"
 	"regexp"
-	"strings"
 )
 
 var (
-	pingMatcher = regexp.MustCompile("^PING")
-	netMatcher  = regexp.MustCompile(":.*")
-	msgMatcher  = regexp.MustCompile(" :.+")
-	chanMatcher = regexp.MustCompile("#\\w+")
-	userMatcher = regexp.MustCompile("^:(\\w+)!")
-	joinMatcher = regexp.MustCompile("JOIN")
+	pingMatcher    = regexp.MustCompile("^PING")
+	netMatcher     = regexp.MustCompile(":.*")
+	ircLineMatcher = regexp.MustCompile(":(.+)!.+ (.+) (#.+) :(.+)")
 )
 
 type Bot struct {
@@ -22,7 +18,7 @@ type Bot struct {
 }
 
 /*
-	Connects to the given irc server and returning an instance of Bot.
+	Connects to the given irc server returning an instance of Bot.
 */
 func Connect(server string) *Bot {
 	conn := Dial(server)
@@ -65,17 +61,24 @@ func (b *Bot) Pm(user, msg string) {
 }
 
 /*
-	Adds a Plugin to the bots Plugin slice.
+	Adds a Plugin to the Bots Plugins slice.
 */
 func (b *Bot) AddPlugin(plugin *Plugin) {
 	b.Plugins = append(b.Plugins, plugin)
 }
 
+//Adds a list of Plugins to the Bots Plugins slice.
+func (b *Bot) AddPlugins(plugins []*Plugin) {
+	for _, plugin := range plugins {
+		b.Plugins = append(b.Plugins, plugin)
+	}
+}
+
 /*
 	Loops endlessly reading each line placed
 	into the bots In channel in the order they are received
-	also loops over the bots Plugin slice for any matches on the current line
-	if the line matches the Plugins Runner function is executed.
+	also iterates over the bots Plugin slice for any matches from Matcher on the current line
+	if the line matches the Plugins Callback is executed.
 */
 func (b *Bot) RunLoop() {
 	irc := make(map[string]string)
@@ -90,11 +93,13 @@ func (b *Bot) RunLoop() {
 		for _, plugin := range b.Plugins {
 			go func() {
 				if plugin.Matcher.Match([]byte(ln)) {
-					irc["chan"] = chanMatcher.FindString(ln)
-					irc["sender"] = strings.Trim(userMatcher.FindStringSubmatch(ln)[0], ":!")
-					irc["msg"] = msgMatcher.FindString(ln)
+					matcher := ircLineMatcher.FindStringSubmatch(ln)
+					irc["sender"] = matcher[1]
+					irc["msgType"] = matcher[2]
+					irc["chan"] = matcher[3]
+					irc["msg"] = matcher[4]
 
-					plugin.Runner(b, irc)
+					plugin.Callback(b, irc)
 				}
 			}()
 		}

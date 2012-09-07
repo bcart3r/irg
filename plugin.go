@@ -2,7 +2,9 @@ package irg
 
 import "regexp"
 
+type IrcMap map[string]string
+
 type Plugin struct {
-	Matcher *regexp.Regexp
-	Runner  func(b *Bot, irc map[string]string)
+	Matcher  *regexp.Regexp
+	Callback func(b *Bot, irc IrcMap)
 }
