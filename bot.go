@@ -94,7 +94,7 @@ func (b *Bot) RunLoop() {
 			if plugin.Matcher.Match([]byte(ln)) {
 				go func() {
 					matcher := ircLineMatcher.FindStringSubmatch(ln)
-					irc["sender"] = matcher[1]
+					irc["user"] = matcher[1]
 					irc["msgType"] = matcher[2]
 					irc["chan"] = matcher[3]
 					irc["msg"] = matcher[4]

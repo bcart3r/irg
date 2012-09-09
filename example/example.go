@@ -9,7 +9,7 @@ import (
 func said() *irg.Plugin {
 	match := regexp.MustCompile("!said")
 	run := func(b *irg.Bot, irc irg.IrcMap) {
-		b.Msg(irc["chan"], "hey "+irc["sender"]+"you said "+irc["msg"])
+		b.Msg(irc["chan"], "hey "+irc["user"]+"you said "+irc["msg"])
 	}
 
 	return &irg.Plugin{match, run}
@@ -19,7 +19,7 @@ func sayTime() *irg.Plugin {
 	match := regexp.MustCompile("!time")
 	run := func(b *irg.Bot, irc irg.IrcMap) {
 		b.Msg(irc["chan"],
-			"hey there "+irc["sender"]+" the time is "+time.Now().String())
+			"hey there "+irc["user"]+" the time is "+time.Now().String())
 	}
 
 	return &irg.Plugin{match, run}
