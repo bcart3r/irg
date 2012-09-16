@@ -2,12 +2,11 @@ package main
 
 import (
 	"github.com/bcart3r/irg"
-	"regexp"
 	"time"
 )
 
 func said() *irg.Plugin {
-	match := regexp.MustCompile("!said")
+	match := "!said"
 	run := func(b *irg.Bot, irc irg.IrcMap) {
 		b.Msg(irc["chan"], "hey "+irc["user"]+"you said "+irc["msg"])
 	}
@@ -16,7 +15,7 @@ func said() *irg.Plugin {
 }
 
 func sayTime() *irg.Plugin {
-	match := regexp.MustCompile("!time")
+	match := "!time"
 	run := func(b *irg.Bot, irc irg.IrcMap) {
 		b.Msg(irc["chan"],
 			"hey there "+irc["user"]+" the time is "+time.Now().String())

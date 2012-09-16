@@ -2,6 +2,7 @@ package irg
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 )
 
@@ -60,6 +61,10 @@ func (b *Bot) Pm(user, msg string) {
 	b.write("PRIVMSG " + user + " :" + msg)
 }
 
+func (b *Bot) Part(ch string) {
+	b.write("PART " + ch)
+}
+
 /*
 	Adds a Plugin to the Bots Plugins slice.
 */
@@ -91,16 +96,19 @@ func (b *Bot) RunLoop() {
 		}
 
 		for _, plugin := range b.Plugins {
-			if plugin.Matcher.Match([]byte(ln)) {
-				go func() {
-					matcher := ircLineMatcher.FindStringSubmatch(ln)
-					irc["user"] = matcher[1]
-					irc["msgType"] = matcher[2]
-					irc["chan"] = matcher[3]
-					irc["msg"] = matcher[4]
+			match, err := regexp.MatchString(plugin.Matcher, ln)
+			if err != nil {
+				log.Println(err)
+			}
 
-					plugin.Callback(b, irc)
-				}()
+			if match {
+				matcher := ircLineMatcher.FindStringSubmatch(ln)
+				irc["user"] = matcher[1]
+				irc["msgType"] = matcher[2]
+				irc["chan"] = matcher[3]
+				irc["msg"] = matcher[4]
+
+				go plugin.Callback(b, irc)
 			}
 		}
 	}
